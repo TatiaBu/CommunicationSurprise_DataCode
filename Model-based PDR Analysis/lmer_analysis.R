@@ -41,7 +41,7 @@ TCGdata_aggregated$surprise_levels <- as.factor(TCGdata_aggregated$surprise_leve
 
 
 ## 7) run the lmer() evarage pdr predicted response  (linear) for different surprise types
-m1 <- lmer(Pupil_base ~ surprise_levels-1 + (1  | sub), data = TCGdata_aggregated)
+print9 <- lmer(Pupil_base ~ surprise_levels-1 + (1  | sub), data = TCGdata_aggregated)
 
 ## 8) Estimate marginal means for surprise levels
 emm <- emmeans(m1, specs = "surprise_levels")
