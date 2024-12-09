@@ -1,240 +1,200 @@
-clear all; close all;clc;
 
-directory_path='C:\Users\user\Desktop\CommunicationSurprise_DataCode';%please make sure that your working directory is set to ...\CommunicationSurprise_DataCode
+clear all; close all; clc;
+
+directory_path = 'C:\Users\user\Desktop\CommunicationSurprise_DataCode'; % Set the correct working directory
 cd(directory_path); 
 
-load('Participants-generated and Model-simulated Messages\behavioural and simulated data\percentage_data1.mat'); %import percentage data for the 4 types of the dataset( if you want to run these code for dataset 2, change data1 to data 2
-% D is a 116x19 table and it includes 4 types of datas that are identified
-% with group number
-%group 1: participants data
-%group 2: SMM
-%group 3: SM
-%group 4: MM
+load('Participants-generated and Model-simulated Messages\behavioural and simulated data\percentage_data2.mat'); % Import data
+bf_mtype = readmatrix('Participants-generated and Model-simulated Messages\bayes factors\Bf_mtype1_surprise_models.csv'); % Import BF for mtype
+bf_ttype = readmatrix('Participants-generated and Model-simulated Messages\bayes factors\Bf_ttype1_surprise_models.csv'); % Import BF for trial type
+bf_mfeature = readmatrix('Participants-generated and Model-simulated Messages\bayes factors\Bf_mfeature1_surprise_models.csv'); % Import BF for features
 
-bf_mtype = readmatrix('Participants-generated and Model-simulated Messages\bayes factors\Bf_mtype1_surprise_models.csv') %import BF for mtype dataset (change mtype1 to mtype2 if you want to run analysis for the second dataset
-bf_ttype = readmatrix('Participants-generated and Model-simulated Messages\bayes factors\Bf_ttype1_surprise_models.csv') %import BF for trial type
-bf_mfeature = readmatrix('Participants-generated and Model-simulated Messages\bayes factors\Bf_mfeature1_surprise_models.csv') %import BF for the message profile (features)
+group_id = 1; % Set group identifier
 
-group_id=1; % by changing this group identifier you can choose which dataset you plot. For exmaple if you want to plot behavioural data you choose 1 (as it is given in the exmaple now). Refer to group ids above to get the correct data
+% Uncomment as needed to plot different features
+plot_mtype(D, group_id, bf_mtype); % Plot mtype
+plot_ttype(D, group_id, bf_ttype); % Plot ttype
+plot_mfeature(D, group_id, bf_mfeature); % Plot mfeature
 
-plot_mtype(D,group_id,bf_mtype) %1) plot mtype
-plot_ttype(D,group_id,bf_ttype)  %2) plot ttype
-plot_mfeature(D,group_id,bf_mfeature) %3) plot mfeature
+%%%%%%%%%%%%%%%%%%%%% Sub-Functions %%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-
-%%%%%%%%%%%%%%%%%%%%% sub-functions  %%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%% 1) plot mtype
-function plot_mtype(data,id,bf)
+function plot_mtype(data, id, bf)
+ind_group = find(data.group == id);
+data = data(ind_group, :);
 
-ind_group=find(data.group==id);
-data=data(ind_group,:);
+% Calculate SE and means
+SEM = [std(data.E(:,1)), std(data.W(:,1)), std(data.P(:,1))] ./ sqrt(size(data.E, 1));
+means = [mean(data.E(:,1)), mean(data.W(:,1)), mean(data.P(:,1))];
+%means = [mean(nonzeros(data.E(:,1))), mean(nonzeros(data.W(:,1))), mean(nonzeros(data.P(:,1)))];
 
-%caclulate SE
-SEM(1,1) = std(data.E(:,1))/sqrt(length(data.E(:,1)));
-SEM(1,2) = std(data.W(:,1))/sqrt(length(data.W(:,1)));
-SEM(1,3) = std(data.P(:,1))/sqrt(length(data.P(:,1)));
-%calculate mean
-meanE=mean(data.E(:,1));meanW=mean(data.W(:,1));meanP=mean(data.P(:,1));
-
-%plot
-figure(6)
-ax = gca();
-x = [meanE,meanW,meanP]; x=round(x);
-legends={'Enter-Exit';'Wiggly';'Pass-By'}
-colors = {[224, 122, 95]/256;   %hot pink
-    [61, 64, 91]/256;   %spring green
-    [129, 178, 154]/256};  %dark orchid
-y = [1:3];
-b=bar(y,x,'FaceColor','flat','BarWidth', 0.75);
-b.CData(1,:) = colors{1,:};
-b.CData(2,:) = colors{2,:};
-b.CData(3,:) = colors{3,:};
+% Plot bar graph
+figure;
+x = means;
+legends = {'EE', 'W', 'PB'};
+colors = {[224, 122, 95]/256, [61, 64, 91]/256, [129, 178, 154]/256}; % Base colors
+light_colors = cellfun(@(c) c + 0.5 * (1 - c), colors, 'UniformOutput', false); % Lighter colors
+y = 1:3;
+b = bar(y, x, 'FaceColor', 'flat', 'BarWidth', 0.75);
+for i = 1:length(colors)
+    b.CData(i,:) = colors{i};
+end
 ylim([0 100]);
-% Calculate center of each bar
-set(b,'LineWidth',0.01,'EdgeColor',[ 1     1     1 ]);
-ylabel('Percentage %');
+set(b, 'LineWidth', 0.01, 'EdgeColor', [1 1 1], 'FaceAlpha', 0.7); % Adjust transparency
+ylabel('%');
+set(gca, 'Box', 'off', 'TickDir', 'out', 'XMinorTick', 'off', ...
+    'YMinorTick', 'on', 'YGrid', 'off', 'XColor', [.3 .3 .3], ...
+    'YColor', [.3 .3 .3], 'YTick', 0:20:100, 'xticklabel', legends);
+hold on;
 
-set(gca, ...
-    'Box'         , 'off'     , ...
-    'TickDir'     , 'out'     , ...
-    'TickLength'  , [.02 .02] , ...
-    'XMinorTick'  , 'off'      , ...
-    'YMinorTick'  , 'on'      , ...
-    'YGrid'       , 'off'      , ...
-    'XColor'      , [.3 .3 .3], ...
-    'YColor'      , [.3 .3 .3], ...
-    'YTick'       , 0:10:100, ...
-    'xticklabel',legends)
-hold on
-errorbar(x, SEM, 'k', 'linestyle', 'none','CapSize',4,'Color', [.3 .3 .3]);
-ctr = bsxfun(@plus, b(1).XData, [b(1).XOffset]');
 
-for i=2:length(bf(:,id))
-    if bf(i,id)<1 & x(i-1)~=0
-        plot(ctr(i-1), x(i-1)+6,  '*','MarkerSize',6,'Color', [.3 .3 .3]);
+% Overlay individual data points with jitter
+x_offset = 0.4; % Adjust horizontal spread of data points
+for i = 1:length(colors)
+    % Select corresponding data field dynamically
+    if i == 1
+        field_data = data.E(:, 1); % Enter-Exit
+    elseif i == 2
+        field_data = data.W(:, 1); % Wiggly
+    elseif i == 3
+        field_data = data.P(:, 1); % Pass-By
+    end
+    scatter(i + x_offset * (rand(size(field_data, 1), 1) - 0.5), field_data, 10, 'filled', ...
+        'MarkerFaceColor', light_colors{i}, 'MarkerEdgeColor', 'none', 'MarkerFaceAlpha', 0.3);
+end
+
+% Significance stars
+ctr = y;
+for i = 2:length(bf(:,id))
+    if bf(i,id) < 1 && x(i-1) ~= 0
+        plot(ctr(i-1), x(i-1)+6, '*', 'MarkerSize', 6, 'Color', [.3 .3 .3]);
     end
 end
 
+hold on;
+
+% Error bars
+errorbar(y, x, SEM, 'k', 'linestyle', 'none', 'CapSize', 4, 'Color', [.3 .3 .3]);
 end
 
 %%%%%%%%%%%%% 2) plot ttype
-function plot_ttype(data,id,bf)
-%get ttype data
-ind_group=find(data.group==id);
-data=data(ind_group,:);
+function plot_ttype(data, id, bf)
+ind_group = find(data.group == id);
+data = data(ind_group, :);
 
-e(:,1)=data.E_easy(:,1);
-e(:,2)=data.W_easy(:,1);
-e(:,3)=data.P_easy(:,1);
-h(:,1)=data.E_hard(:,1);
-h(:,2)=data.W_hard(:,1);
-h(:,3)=data.P_hard(:,1);
+% Prepare data for plotting
+e = [data.E_easy(:,1), data.W_easy(:,1), data.P_easy(:,1)];
+h = [data.E_hard(:,1), data.W_hard(:,1), data.P_hard(:,1)];
+SEM = [nanstd(e)/sqrt(size(e, 1)); nanstd(h)/sqrt(size(h, 1))];
+means = [nanmean(e); nanmean(h)];
 
-%caclulate SE
-SEM(1,:) = nanstd(e)/sqrt(length(e));
-SEM(2,:) = nanstd(h)/sqrt(length(h));
-%calculate mean
-s(1,:)=nanmean(e);
-s(2,:)=nanmean(h);
-
-%plot
-b=bar(s,'FaceColor','flat','BarWidth', 0.9);
-colors = {[224, 122, 95]/256;   %hot pink
-    [61, 64, 91]/256;   %spring green
-    [129, 178, 154]/256};  %dark orchidset(b,{'FaceColor'},colors);
-set(b,'LineWidth',0.01,'EdgeColor',[ 1     1     1]);
-set(b,{'FaceColor'},colors);
-
-legends={'Enter-Exit';'Wiggly';'Pass-By'}% model data
-
-name = {'Indirect trial','Direct trial'};
+% Plot bar graph
+figure;
+b = bar(means, 'FaceColor', 'flat', 'BarWidth', 0.9,'FaceAlpha', 0.7,'EdgeColor', [1 1 1]);
+colors = {[224, 122, 95]/256, [61, 64, 91]/256, [129, 178, 154]/256}; % Base colors
+light_colors = cellfun(@(c) c + 0.5 * (1 - c), colors, 'UniformOutput', false); % Lighter colors
+for i = 1:length(colors)
+    b(i).FaceColor = colors{i};
+end
 ylim([0 100]);
-ylabel('Percentage');
-hold on
+ylabel('%');
 
-% Calculate center of each bar
-[ngroups, nbars] = size(s);
-% Calculate the width for each bar group
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength', [.02 .02], ...
+    'XMinorTick', 'off', 'YMinorTick', 'on', 'YGrid', 'off', ...
+    'XColor', [.3 .3 .3], 'YColor', [.3 .3 .3], 'YTick', 0:20:100, ...
+    'xticklabel', {'Indirect trial', 'Direct trial'});
+hold on;
+
+% Error bars
+[ngroups, nbars] = size(means);
 groupwidth = min(0.8, nbars/(nbars + 1.5));
 
-for i = 1:nbars
-    % Calculate center of each bar
-    x = (1:ngroups) - groupwidth/2 + (2*i-1) * groupwidth / (2*nbars);
-    errorbar(x, s(:,i), SEM(:,i), 'Color', [.3 .3 .3],'linestyle', 'none','CapSize',3);
-end
 
-set(gca, ...
-    'Box'         , 'off'     , ...
-    'TickDir'     , 'out'     , ...
-    'TickLength'  , [.02 .02] , ...
-    'XMinorTick'  , 'off'      , ...
-    'YMinorTick'  , 'on'      , ...
-    'YGrid'       , 'off'      , ...
-    'XColor'      , [.3 .3 .3], ...
-    'YColor'      , [.3 .3 .3], ...
-    'YTick'       , 0:10:100, ...
-    'xticklabel',name)
-hold on
-
-ctr1 = bsxfun(@plus, b(1).XData, [b(1).XOffset]');
-ctr2 = bsxfun(@plus, b(2).XData, [b(2).XOffset]');
-ctr3 = bsxfun(@plus, b(3).XData, [b(3).XOffset]');
-
-ctr=[ctr1,ctr2,ctr3];
-ctr=sort(ctr);
-s=s';s=s(:);
-
-for i=2:length(bf(:,id))
-    if bf(i,id)<1 & s(i-1)~=0
-        plot(ctr(i-1), s(i-1)+6,  '*','MarkerSize',6,'Color', [.3 .3 .3]);
+% Overlay individual data points with jitter
+x_offset = 0.17; % Adjust horizontal spread of data points
+for i = 1:ngroups
+    for j = 1:nbars
+        % Dynamically select data fields for individual points
+        if i == 1
+            field_data = e(:, j); % Easy trials
+        elseif i == 2
+            field_data = h(:, j); % Hard trials
+        end
+        x_jitter = (i - groupwidth/2 + (2*j-1) * groupwidth / (2*nbars)) + x_offset * (rand(size(field_data, 1), 1) - 0.5);
+        scatter(x_jitter, field_data, 10, 'filled', ...
+            'MarkerFaceColor', light_colors{j}, 'MarkerEdgeColor', 'none', 'MarkerFaceAlpha', 0.3); % Match colors with bars
     end
 end
-legend(legends,'Orientation','vertical','TextColor',[.3 .3 .3]);
-legend boxoff  ;
-
+hold on
+for j = 1:nbars
+    x = (1:ngroups) - groupwidth/2 + (2*j-1) * groupwidth / (2*nbars);
+    errorbar(x, means(:,j), SEM(:,j), 'Color', [.3 .3 .3], 'linestyle', 'none', 'CapSize', 3);
 end
+% Significance stars
+ctr = sort(b(1).XData);
+for i = 2:length(bf(:,id))
+    if bf(i,id) < 1
+        plot(ctr(i-1), means(i-1)+6, '*', 'MarkerSize', 6, 'Color', [.3 .3 .3]);
+    end
+end
+legend({'Enter-Exit', 'Wiggly', 'Pass-By'}, 'Location', 'northeast', 'TextColor', [.3 .3 .3]);
+legend boxoff;
+end
+
 %%%%%%%%%%%%% 3) plot mfeature
+function plot_mfeature(data, id, bf)
+ind_group = find(data.group == id);
+data = data(ind_group, :);
 
-function plot_mfeature(data,id,bf)
-% get the mfeature data
-ind_group=find(data.group==id);
-data=data(ind_group,:);
+% Prepare data for plotting
+E = [data.E_Forward(:,1), data.E_backward(:,1), data.E_left_right(:,1)];
+W = [data.W_forward(:,1), data.W_backward(:,1), data.W_left_right(:,1)];
+P = [data.P_forward(:,1), data.P_backward(:,1), data.P_left_right(:,1)];
+SEM = [nanstd(E)/sqrt(size(E, 1)); nanstd(W)/sqrt(size(W, 1)); nanstd(P)/sqrt(size(P, 1))];
+means = [nanmean(E); nanmean(W); nanmean(P)];
 
-E(:,1)=data.E_Forward(:,1);
-E(:,2)=data.E_backward(:,1);
-E(:,3)=data.E_left_right(:,1);
+% Plot bar graph
+figure;
+b = bar(means, 'FaceColor', 'flat', 'BarWidth', 0.9,'FaceAlpha', 0.7,'EdgeColor', [1 1 1]);
+colors = {[130, 112, 129]/256, [222, 186, 111]/256, [173, 106, 108]/256};
+light_colors = cellfun(@(c) c + 0.5 * (1 - c), colors, 'UniformOutput', false);
+for i = 1:length(colors)
+    b(i).FaceColor = colors{i};
+end
+ylim([0 60]);
+ylabel('%');
+set(gca, 'Box', 'off', 'TickDir', 'out', 'TickLength', [.02 .02], ...
+    'XMinorTick', 'off', 'YMinorTick', 'on', 'YGrid', 'off', ...
+    'XColor', [.3 .3 .3], 'YColor', [.3 .3 .3], 'YTick', 0:10:60, ...
+    'xticklabel', {'EE', 'W', 'PB'});
+hold on;
 
-W(:,1)=data.W_forward(:,1);
-W(:,2)=data.W_backward(:,1);
-W(:,3)=data.W_left_right(:,1);
-
-P(:,1)=data.P_forward(:,1);
-P(:,2)=data.P_backward(:,1);
-P(:,3)=data.P_left_right(:,1);
-
-%calculate the SE
-SEM(1,:) = nanstd(E)/sqrt(length(E));
-SEM(2,:) = nanstd(W)/sqrt(length(W));
-SEM(3,:) = nanstd(P)/sqrt(length(P));
-
-%calculate the mean
-s(1,:)=nanmean(E);
-s(2,:)=nanmean(W);
-s(3,:)=nanmean(P);
-
-%plot
-b=bar(s,'FaceColor','flat','BarWidth', 0.9);
-colors = {[130, 112, 129]/256;   %hot pink
-    [222, 186, 111]/256;   %spring green
-    [173, 106, 108]/256};  %darkrk orchid
-set(b,{'FaceColor'},colors);
-set(b,'LineWidth',0.01,'EdgeColor',[ 1     1     1]);
-legends={'Forward';'Backward';'Left/Right'}
-
-name = {'Enter-Exit';'Wiggly';'Pass-By'};
-ylabel('Percentage');
-hold on
-
-% Calculate center of each bar
-[ngroups, nbars] = size(s);
-% Calculate the width for each bar group
+% Error bars
+[ngroups, nbars] = size(means);
 groupwidth = min(0.8, nbars/(nbars + 1.5));
 
-for i = 1:nbars
-    % Calculate center of each bar
-    x = (1:ngroups) - groupwidth/2 + (2*i-1) * groupwidth / (2*nbars);
-    errorbar(x, s(:,i), SEM(:,i), 'Color', [.3 .3 .3],'linestyle', 'none','CapSize',3);
-end
-ylim([0 40]);
-set(gca, ...
-    'Box'         , 'off'     , ...
-    'TickDir'     , 'out'     , ...
-    'TickLength'  , [.02 .02] , ...
-    'XMinorTick'  , 'off'      , ...
-    'YMinorTick'  , 'on'      , ...
-    'YGrid'       , 'off'      , ...
-    'XColor'      , [.3 .3 .3], ...
-    'YColor'      , [.3 .3 .3], ...
-    'YTick'       , 0:10:100, ...
-    'xticklabel',name)
-hold on
 
-
-ctr1 = bsxfun(@plus, b(1).XData, [b(1).XOffset]');
-ctr2 = bsxfun(@plus, b(2).XData, [b(2).XOffset]');
-ctr3 = bsxfun(@plus, b(3).XData, [b(3).XOffset]');
-ctr=[ctr1,ctr2,ctr3];
-ctr=sort(ctr);
-s=s';s=s(:);
-
-for i=2:length(bf(:,id))
-    if bf(i,id)<1 & s(i-1)~=0
-        plot(ctr(i-1), s(i-1)+15,  '*','MarkerSize',6,'Color', [.3 .3 .3]);
+% Overlay individual data points with jitter
+x_offset = 0.14;
+for i = 1:ngroups
+    for j = 1:nbars
+        % Dynamically select data fields
+        if i == 1
+            field_data = E(:, j);
+        elseif i == 2
+            field_data = W(:, j);
+        elseif i == 3
+            field_data = P(:, j);
+        end
+        x_jitter = (i - groupwidth/2 + (2*j-1) * groupwidth / (2*nbars)) + x_offset * (rand(size(field_data, 1), 1) - 0.5);
+        scatter(x_jitter, field_data, 10, 'filled', ...
+            'MarkerFaceColor', light_colors{j}, 'MarkerEdgeColor', 'none', 'MarkerFaceAlpha', 0.3);
     end
 end
-legend(legends,'Orientation','vertical','TextColor',[.3 .3 .3]); % indicate confidence sender b2
-legend boxoff  ;
-
+hold on
+for i = 1:nbars
+    x = (1:ngroups) - groupwidth/2 + (2*i-1) * groupwidth / (2*nbars);
+    errorbar(x, means(:,i), SEM(:,i), 'Color', [.3 .3 .3], 'linestyle', 'none', 'CapSize', 3);
+end
 
 end
