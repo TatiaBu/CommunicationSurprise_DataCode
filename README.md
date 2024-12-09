@@ -1,6 +1,6 @@
 # CommunicationSurprise_DataCode
 
-Welcome to the CommunicationSurprise_DataCode repository. This repository is dedicated to storing the data and code that support the analyses and figures featured in our recent manuscript on Communication with Surprise - Computatioinal and Cognitive Mechanisms of Non-verbal Human Interactions. Each folder contains specific parts of the work, as outlined below.
+Welcome to the CommunicationSurprise_DataCode repository. This repository is dedicated to storing the data and code that support the analyses and figures featured in our recent manuscript on Expectation Violations Signal Goals in Novel Human Communication. Each folder contains specific parts of the work, as outlined below.
 
 ## Repository Contents
 
