@@ -49,6 +49,15 @@ TCGdata$sub <- as.factor(TCGdata$sub)#factor 1
 ## 8) run the lmer() evarage pdr predicted response  (NONlinear) for surprise as the continous variable
 m1 <- lmer(Pupil_base ~ surprise-1 + (1 + surprise | sub), data = TCGdata) # with radnom slope and intercept 
 
+## Check residuals for normality
+residuals_m1 <- residuals(m1)
+check_distribution(residuals_m1)
+plot(check_distribution(residuals_m1))
+
+
+## Check for homoscedasticity (equal variances)
+library(performance)
+check_heteroscedasticity(m1)
 
 ## 9) estimate the predicted means
 emm1 <- ggemmeans(m1, 'surprise[all]')
